@@ -25,7 +25,7 @@ module.exports = function(filePath) {
         // Group 1 = prepend attributes (with whitespace)
         // Group 2 = svg url
         // Group 3 = append attributes (with whitespace)
-        var regex = /<img([^\/>]*)\ssrc=["']([^\s]*.svg)["']([^\/>]*)(\/?)>/ig;
+        var regex = /<img([^\/>]*)\ssrc=["']([^\s]*.svg)["']([^\/>]*)\/?>/ig;
 
         asyncReplace(
             fileContent,
