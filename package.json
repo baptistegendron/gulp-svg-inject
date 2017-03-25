@@ -1,0 +1,30 @@
+{
+  "name": "gulp-svg-inject",
+  "version": "0.9.0",
+  "description": "Inline svg files inside html / js / css files",
+  "keywords": [
+    "gulpplugin",
+	"svg",
+    "inline",
+    "inject",
+    "html",
+	"js",
+	"css"
+  ],
+  "main": "index.js",
+  "author": "Bateast2",
+  "license": "MIT",
+  "dependencies": {
+    "event-stream": "latest",
+    "iconv-lite": "latest",
+    "gulp-util": "^3.0.7"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bateast2/gulp-svg-inject"
+  },
+  "bugs": {
+    "url": "https://github.com/bateast2/gulp-svg-inject/issues"
+  },
+  "homepage": "https://github.com/bateast2/gulp-svg-inject"
+}
