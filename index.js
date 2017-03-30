@@ -8,11 +8,11 @@ var iconv = require('iconv-lite');
 var gutil = require('gulp-util');
 var fetchUrl = require("fetch").fetchUrl;
 var asyncReplace = require("async-replace");
+var $ = require('cheerio');
 
 module.exports = function(filePath) {
 
     var go = function(file, callback) {
-
         // Decode input file:
         var fileContent = iconv.decode(file.contents, 'utf-8');
         if(fileContent.indexOf('�') > -1){
@@ -22,10 +22,13 @@ module.exports = function(filePath) {
 
 
         // Catch expression like <img src="*.svg"> or <img src='*.svg'/> or <img id="*" src="*.svg" class="*" otherTag="*" />
-        // Group 1 = prepend attributes (with whitespace)
-        // Group 2 = svg url
-        // Group 3 = append attributes (with whitespace)
-        var regex = /<img([^\/>]*)\ssrc=["']([^\s]*.svg)["']([^\/>]*)\/?>/ig;
+        // and when inside a js file: var item = '<img src="*.svg">' or item="<img src='*.svg'>"
+        // Group 1 = enclosing quote
+        // Group 2 = prepend attributes (with whitespace)
+        // Group 3 = svg url
+        // Group 4 = append attributes (with whitespace)
+        // Group 5 = enclosing quote
+        var regex = /(['"`]?)<img([^\/>]*)\ssrc=["']([^\s]*.svg)["']([^\/>]*)\/?>(['"`]?)/ig;
 
         asyncReplace(
             fileContent,
@@ -51,9 +54,13 @@ module.exports = function(filePath) {
     return es.map(go);
 
 
-    function replaceFunction(match, group1, group2, group3, offset, string, done){
-        var src = group2;
-        var attributesToEmbed = group1+group3;
+    function replaceFunction(match, group1, group2, group3, group4, group5, offset, string, done){
+        var src = group3;
+        var attributesToEmbed = '<div '+group2+group4+' />';
+        var enclosingQuote = false;
+        if (group1!=="" && group5!=="") {
+            enclosingQuote = true;
+        }
 
         if(isLocal(src)) {
             fs.readFile("./" + src, function(error, fileContent) {
@@ -63,7 +70,7 @@ module.exports = function(filePath) {
                         message: 'Could not find/read SVG file (' + src + '): '+error
                     });
                 }
-                buildReplacingString(fileContent.toString(), attributesToEmbed);
+                buildReplacingString(fileContent.toString(), attributesToEmbed, enclosingQuote);
             });
         }
         else {
@@ -79,14 +86,62 @@ module.exports = function(filePath) {
                             +'\nIf the file is accessible from your browser, be sure to be CONNECTED to the network (it is probalby a DNS issue, not configured when no network adapter is connected)'
                         });
                     }
-                    buildReplacingString(fileContent.toString(), attributesToEmbed);
+                    buildReplacingString(fileContent.toString(), attributesToEmbed, enclosingQuote);
                 }
             );
         }
 
-        function buildReplacingString(inlineSvg, attributesToEmbed) {
-            inlineSvg = inlineSvg.replace( "<svg","<svg"+attributesToEmbed )
-            done(null, inlineSvg);// done(error , replacingString)
+        function buildReplacingString(inlineSvg, attributesToEmbedHtml, enclosingQuote) {
+
+           // Merge attributes:
+            var attributesToEmbedArray = $('div', attributesToEmbedHtml).toArray()[0].attribs;
+            var $svg = $('svg', inlineSvg);
+            for (var key in attributesToEmbedArray) {
+                var attribute = $svg.attr(key);
+                if(attribute===undefined){
+                    attribute = "";
+                }
+                $svg.attr(key, attribute+" "+attributesToEmbedArray[key]);
+            }
+            inlineSvg = iconv.encode($.html($svg), 'utf-8');
+
+
+            // In case there are enclosing quotes, replace them with backtick char in order to handle svg elements with linebreak
+            if(enclosingQuote) {
+                inlineSvg = "`"+inlineSvg+"`";
+            }
+
+
+            // Return: done(error , replacingString)
+            done(null, inlineSvg);
+        }
+
+        function mergeAttributes(htmlTag, attributesToEmbed){
+            var svgAttributes = extractAttributesIntoArray(htmlTag);
+            var imgAttributes = extractAttributesIntoArray(attributesToEmbed);
+            // Catch attr="*" or attr='*'
+            // Group1 = attr
+            // Group2 = "*" or '*'
+            var regex = /\s([^\s]+)=(["][^"]*["]|['][^']*['])/ig;
+            var match;
+            while( (match = regex.exec(htmlTag)) != null ) {
+                var LinkText = match[1];
+                var Match = match[0];
+                htmlTag = htmlTag.replace(new RegExp(Match, "g"), '<a href="#">" + LinkText + "</a>');
+            }
+        }
+
+        function extractAttributesIntoArray(htmlTag){
+            // Catch attr="*" or attr='*'
+            // Group1 = attr
+            // Group2 = "*" or '*'
+            var regex = /\s([^\s]+)=(["][^"]*["]|['][^']*['])/ig;
+            var match;
+            var result = [];
+            while( (match = regex.exec(htmlTag)) != null ) {
+                result[match[1]] = match[2].substring(1,match[2].length-1);
+            }
+            return result;
         }
 
         function isLocal(href) {
