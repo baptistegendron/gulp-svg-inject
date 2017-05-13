@@ -57,9 +57,9 @@ module.exports = function(filePath) {
     function replaceFunction(match, group1, group2, group3, group4, group5, offset, string, done){
         var src = group3;
         var attributesToEmbed = '<div '+group2+group4+' />';
-        var enclosingQuote = false;
+        var enclosingQuote = "";
         if (group1!=="" && group5!=="") {
-            enclosingQuote = true;
+            enclosingQuote = group1;
         }
 
         if(isLocal(src)) {
@@ -93,7 +93,7 @@ module.exports = function(filePath) {
 
         function buildReplacingString(inlineSvg, attributesToEmbedHtml, enclosingQuote) {
 
-           // Merge attributes:
+            // Merge attributes:
             var attributesToEmbedArray = $('div', attributesToEmbedHtml).toArray()[0].attribs;
             var $svg = $('svg', inlineSvg);
             for (var key in attributesToEmbedArray) {
@@ -103,12 +103,20 @@ module.exports = function(filePath) {
                 }
                 $svg.attr(key, attribute+" "+attributesToEmbedArray[key]);
             }
-            inlineSvg = iconv.encode($.html($svg), 'utf-8');
+            inlineSvg = iconv.encode($.html($svg), 'utf-8').toString();
 
 
-            // In case there are enclosing quotes, replace them with backtick char in order to handle svg elements with linebreak
-            if(enclosingQuote) {
-                inlineSvg = "`"+inlineSvg+"`";
+            // In case there are enclosing quotes (for instance in a .js file),
+            if(enclosingQuote!=="") {
+                // ES2015 compatible (preserve formatting of inlined svg):
+                // replace them with back-tick char in order to handle svg elements with linebreak
+                // inlineSvg = "`"+inlineSvg+"`";
+
+                // ES5 compatible:
+                //remove all line breaks from the inlined elements to not break javascript
+                inlineSvg = inlineSvg.replace(/(\r\n|\n|\r)/gm, '');
+                
+                inlineSvg = enclosingQuote+inlineSvg+enclosingQuote;
             }
 
 

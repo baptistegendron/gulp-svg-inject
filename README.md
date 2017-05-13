@@ -1,7 +1,7 @@
 # [gulp][gulp]-svg-inject
 
-> Inline svg files and urls inside html or js files.
-This gulp plugin parses html or js files and replaces \<img\> tags that point to local or remote svg files with the content of the svg files.<br>
+> Inline svg files inside html or js files
+This gulp plugin parses HTML and JS files and replaces <img> tag that point to local or remote svg files with the content of the svg files.
 Inlining svg file is useful for applying (dynamic) css styling to svg elements.
 
 

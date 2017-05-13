@@ -1,7 +1,7 @@
 {
   "name": "gulp-svg-inject",
-  "version": "0.9.2",
-  "description": "Inline svg files inside html or js files",
+  "version": "1.0.0",
+  "description": "Inline svg files inside HTML and JS files",
   "keywords": [
     "gulp",
 	"gulpplugin",
