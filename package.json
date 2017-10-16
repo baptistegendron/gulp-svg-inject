@@ -1,16 +1,16 @@
 {
   "name": "gulp-svg-inject",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Inline svg files inside HTML and JS files",
   "keywords": [
     "gulp",
-	"gulpplugin",
-	"svg",
+    "gulpplugin",
+    "svg",
     "inline",
     "inject",
     "html",
-	"js",
-	"css"
+    "js",
+    "css"
   ],
   "main": "index.js",
   "author": "Bateast2",
@@ -21,7 +21,7 @@
     "iconv-lite": "^0.4.15",
     "fetch": "^1.1.0",
     "async-replace": "^1.0.1",
-	"cheerio": "^0.22.0"
+    "cheerio": "^0.22.0"
   },
   "repository": {
     "type": "git",
